@@ -475,17 +475,17 @@ def generate_dataset(gripper_type, chosen_object, sample_num=10):
 def main(sample_num = 10):
     setup_environment()
 
+    two_finger_cylinder = generate_dataset(gripper_type="two-finger", chosen_object="cylinder", sample_num=sample_num)
+    two_finger_cylinder.to_csv(os.path.join(os.path.dirname(__file__), "data", "two_finger_cylinder.csv"), index=False)
+
     three_finger_cube = generate_dataset(gripper_type="three-finger", chosen_object="cube", sample_num=sample_num)
-    three_finger_cube.to_csv("three_finger_cube.csv", index=False)
+    three_finger_cube.to_csv(os.path.join(os.path.dirname(__file__), "data", "three_finger_cube.csv"), index=False)
 
     two_finger_cube = generate_dataset(gripper_type="two-finger", chosen_object="cube", sample_num=sample_num)
-    two_finger_cube.to_csv("two_finger_cube.csv", index=False)
-
-    two_finger_cylinder = generate_dataset(gripper_type="two-finger", chosen_object="cylinder", sample_num=sample_num)
-    two_finger_cylinder.to_csv("two_finger_cylinder.csv", index=False)
+    two_finger_cube.to_csv(os.path.join(os.path.dirname(__file__), "data", "two_finger_cube.csv"), index=False)
 
     three_finger_cylinder = generate_dataset(gripper_type="three-finger", chosen_object="cylinder", sample_num=sample_num)
-    three_finger_cylinder.to_csv("three_finger_cylinder.csv", index=False)
+    three_finger_cylinder.to_csv(os.path.join(os.path.dirname(__file__), "data", "three_finger_cylinder.csv"), index=False)
 
 if __name__ == "__main__":
     main()
