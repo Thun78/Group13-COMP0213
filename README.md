@@ -44,14 +44,26 @@ python main.py --mode test_planner
 
 ## Project Structure
 
+## Project Structure
+
+```plaintext
 /
-├── CW/                # Core coursework source code  
-├── eval/              # Evaluation and testing scripts  
-├── models/            # Class and data model definitions  
-├── data/              # (Optional) Dataset storage directory  
-├── main.py            # Main script with mode-based CLI interface  
-├── requirements.txt   # Python package dependencies  
-└── README.md          # This file  
+├── CW/                     # Core coursework source code  
+│   ├── main.py             # Main entry script for coursework  
+│   ├── train.py            # Training script for classifiers  
+│   ├── model_test.py       # Script for model testing and evaluation  
+│   ├── grippers/           # Modules related to gripper models  
+│   └── objects/            # Modules related to object models  
+├── eval/                   # Evaluation and testing scripts  
+│                           # Used to validate and analyze model performance  
+├── models/                 # Model and data structure definitions  
+│                           # Contains class and data structure definitions  
+├── three_finger_cube.csv   # Dataset CSV files  
+├── three_finger_cylinder.csv  
+├── two_finger_cube.csv  
+├── two_finger_cylinder.csv  
+├── README.md               # This README file  
+```
 
 ## Contributing
 
@@ -65,6 +77,7 @@ If you would like to contribute, please feel free to:
 
 - Thun78
 - TedTang124 (Ted Tang)
+
 
 
 
