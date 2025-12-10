@@ -89,7 +89,7 @@ class Cube(BaseSceneObject):
 class Cylinder(BaseSceneObject):
     def __init__(self, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        urdf_path = os.path.join(current_dir, "cylinder.urdf")
+        urdf_path = os.path.join(current_dir, "objects", "cylinder.urdf")
         super().__init__(urdf_path, position, orientation_euler)
 
     def load(self, scaling: float = 1.0) -> int:
