@@ -14,7 +14,7 @@ def main():
     )
 
     # train_classifier parameter
-    parser.add_argument("--data", default="/Users/thun/Downloads/cw_latest_ver/three_finger_cylinder.csv")
+    parser.add_argument("--data", default="three_finger_cylinder.csv")
     parser.add_argument("--out-train", default="models")
     parser.add_argument("--test-size", type=float, default=0.25)
     parser.add_argument("--cv", type=int, default=5)
