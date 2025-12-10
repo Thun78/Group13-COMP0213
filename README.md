@@ -74,8 +74,10 @@ If you would like to contribute, please feel free to:
 
 ## Contributors
 
-- Thun78
 - TedTang124 (Ted Tang)
+- Thun78(Thun Sahacharoen)
+
+
 
 
 
