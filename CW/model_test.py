@@ -60,6 +60,7 @@ class EnvironmentManager:
 
 
 # Abstract Scene Object
+# Abstract base class for any scene object loaded via a URDF file
 class BaseSceneObject(ABC):
     def __init__(self, urdf_file: str, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
         self.urdf_file = urdf_file
@@ -73,7 +74,7 @@ class BaseSceneObject(ABC):
         raise NotImplementedError
 
 
-
+# Implementation of a cube scene object.
 class Cube(BaseSceneObject):
     def __init__(self, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
         # Initialize Cube with a fixed URDF file "cube_small.urdf"
@@ -92,6 +93,7 @@ class Cylinder(BaseSceneObject):
         super().__init__(urdf_path, position, orientation_euler)
 
     def load(self, scaling: float = 1.0) -> int:
+        # Load the cylinder URDF model into the simulation
         self.id = p.loadURDF(self.urdf_file, self.position, self.orientation_quat, globalScaling=scaling)
         return self.id
 
@@ -107,22 +109,27 @@ class BaseGripper(ABC):
 
     @abstractmethod
     def load(self) -> int:
+        # Load the gripper model into the simulation.
         raise NotImplementedError
 
     @abstractmethod
     def attach_fixed(self, offset: List[float]) -> None:
+        # Attach the gripper with a fixed constraint at the specified offset.
         raise NotImplementedError
 
     @abstractmethod
     def open_gripper(self) -> None:
+        # Command to open the gripper fingers.
         raise NotImplementedError
 
     @abstractmethod
     def close_gripper(self) -> None:
+        # Command to close the gripper fingers.
         raise NotImplementedError
 
     @abstractmethod
     def move_pickup(self, target_position: List[float], stop_dist: float) -> None:
+        # Move the gripper toward a target position to pick up an object.
         raise NotImplementedError
 
     @abstractmethod
@@ -135,11 +142,13 @@ class BaseGripper(ABC):
         contact_ratio_threshold: float = 0.7,
         debug_contacts: bool = False,
     ) -> bool:
+        # Move the gripper upwards to classify or test the object being held.
         raise NotImplementedError
 
 
 class TwoFingersGripper(BaseGripper):
     def __init__(self, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
+        # Pass position and orientation (Euler angles) to the base class
         super().__init__("pr2_gripper.urdf", position, orientation_euler)
 
     def load(self) -> int:
@@ -149,14 +158,14 @@ class TwoFingersGripper(BaseGripper):
     def attach_fixed(self, offset: List[float]) -> None:
         self.constraint_id = p.createConstraint(
             parentBodyUniqueId=self.id,
-            parentLinkIndex=-1,
-            childBodyUniqueId=-1,
-            childLinkIndex=-1,
+            parentLinkIndex=-1, # Base link of the gripper (-1 means base)
+            childBodyUniqueId=-1, # -1 means fixed to world
+            childLinkIndex=-1, # No child link because it's attached to world
             jointType=p.JOINT_FIXED,
-            jointAxis=[0, 0, 0],
-            parentFramePosition=offset,
+            jointAxis=[0, 0, 0], # Joint axis irrelevant for fixed joint
+            parentFramePosition=offset,  # Offset of constraint frame relative to gripper base
             childFramePosition=self.position,
-            parentFrameOrientation=[0, 0, 0, 1],
+            parentFrameOrientation=[0, 0, 0, 1], # Identity quaternion for no rotation at parent frame
             childFrameOrientation=self.orientation_quat,
         )
 
@@ -169,15 +178,21 @@ class TwoFingersGripper(BaseGripper):
             p.setJointMotorControl2(self.id, joint, p.POSITION_CONTROL, targetPosition=0.0, maxVelocity=2.7, force=200)
 
     def move_pickup(self, target_position: List[float], stop_dist: float) -> None:
+        # Compute the difference vector from current position to target position
         dx = target_position[0] - self.position[0]
         dy = target_position[1] - self.position[1]
         dz = target_position[2] - self.position[2]
+
+        # Calculate Euclidean distance
         dist = math.sqrt(dx * dx + dy * dy + dz * dz)
         steps = max(1, int(dist / 0.01))
 
+        # Initialize new position variables 
         new_x, new_y, new_z = self.position
         for step in range(steps):
             alpha = (step + 1) / steps
+
+            # Compute the interpolated position at this step
             new_x = self.position[0] + dx * alpha
             new_y = self.position[1] + dy * alpha
             new_z = self.position[2] + dz * alpha
@@ -185,6 +200,7 @@ class TwoFingersGripper(BaseGripper):
             p.stepSimulation()
             time.sleep(1.0 / 240.0)
 
+            # Calculate remaining distance to the target after this step
             cur_dx = target_position[0] - new_x
             cur_dy = target_position[1] - new_y
             cur_dz = target_position[2] - new_z
@@ -195,10 +211,14 @@ class TwoFingersGripper(BaseGripper):
         self.position = [new_x, new_y, new_z]
 
     def move_up_classify(self, obj_id: int, new_z: float = 1.0, duration: float = 2.5, no_contact_timeout: float = 0.7, contact_ratio_threshold: float = 0.7, debug_contacts: bool = False) -> bool:
+        # Simulation frequency in Hz
         sim_hz = 50
+        
+        # Calculate total number of simulation steps based on duration and frequency
         total_steps = max(1, int(duration * sim_hz))
         timeout_steps = max(1, int(no_contact_timeout * sim_hz))
 
+        # keep track of contact events and no-contact
         contact_steps = 0
         total_contact_checks = 0
         consecutive_no_contact_steps = 0
@@ -221,10 +241,13 @@ class TwoFingersGripper(BaseGripper):
                 consecutive_no_contact_steps += 1
             total_contact_checks += 1
 
+            # If no contact persists for longer than the allowed timeout, return False
             if consecutive_no_contact_steps >= timeout_steps:
                 return False
 
             p.stepSimulation()
+
+            # Sleep to maintain approximately real-time stepping (240 Hz)
             time.sleep(1.0 / 240.0)
 
         contact_ratio = contact_steps / float(max(1, total_contact_checks))
@@ -249,6 +272,7 @@ class ThreeFingersGripper(BaseGripper):
         return self.id
 
     def attach_fixed(self, offset: List[float]) -> None:
+        # Fix the gripper in place using a fixed constraint to the world
         self.constraint_id = p.createConstraint(
             parentBodyUniqueId=self.id,
             parentLinkIndex=-1,
@@ -263,9 +287,11 @@ class ThreeFingersGripper(BaseGripper):
         )
 
     def get_joint_positions(self) -> List[float]:
+        # Return current positions of all joints in the gripper
         return [p.getJointState(self.id, i)[0] for i in range(self.num_joints)]
 
     def _apply_joint_command(self, joint: int, target: float, max_velo: float = 3.0, force: float = 60.0) -> None:
+        # Send position control command to a single joint with velocity and force limits
         p.setJointMotorControl2(self.id, joint, p.POSITION_CONTROL, targetPosition=target, maxVelocity=max_velo, force=force)
 
     def open_gripper(self) -> None:
@@ -284,6 +310,8 @@ class ThreeFingersGripper(BaseGripper):
                     self._apply_joint_command(k, joints[k] - 0.05)
                     closed = True
             iteration += 1
+
+            # Safety break to avoid infinite loop
             if iteration > 1000:
                 break
             p.stepSimulation()
@@ -362,9 +390,7 @@ class ThreeFingersGripper(BaseGripper):
         return contact_ratio >= contact_ratio_threshold
 
 
-# -----------------------
 # Utility
-# -----------------------
 def compute_relative_pose(gripper_id: int, obj_id: int) -> Tuple[List[float], Tuple[float, float, float]]:
     g_pos, g_orn = p.getBasePositionAndOrientation(gripper_id)
     o_pos, o_orn = p.getBasePositionAndOrientation(obj_id)
@@ -377,6 +403,7 @@ def compute_relative_pose(gripper_id: int, obj_id: int) -> Tuple[List[float], Tu
 class BaseSampler(ABC):
     @abstractmethod
     def sample(self, samples: int, orientation_offset_euler: Tuple[float, float, float] | None = None) -> Tuple[List[List[float]], List[List[float]]]:
+        # Return a tuple of positions and orientations
         raise NotImplementedError
 
 
@@ -391,6 +418,7 @@ class SphericalSampler(BaseSampler):
         q_offset = p.getQuaternionFromEuler(orientation_offset_euler) if orientation_offset_euler is not None else None
 
         for _ in range(samples):
+            # Randomly sample spherical coordinates theta and phi within hemisphere
             theta = random.uniform(0, 2 * math.pi)
             phi = random.uniform(0, math.pi / 2)
             x = self.radius * math.sin(phi) * math.cos(theta) + self.obj_center[0]
@@ -407,8 +435,10 @@ class SphericalSampler(BaseSampler):
             roll = random.uniform(-math.pi, math.pi)
 
             if q_offset is None:
+                # If no offset, just use the sampled Euler angles directly
                 orientations.append([roll, pitch, yaw])
             else:
+                # Apply orientation offset by quaternion multiplication
                 q_sample = p.getQuaternionFromEuler([roll, pitch, yaw])
                 _, q_hand = p.multiplyTransforms([0, 0, 0], q_sample, [0, 0, 0], q_offset)
                 rpy_hand = p.getEulerFromQuaternion(q_hand)
@@ -429,6 +459,7 @@ class BaseEvaluator(ABC):
 
 class PredictionEvaluator(BaseEvaluator):
     def evaluate(self, y_true: List[int], y_pred: List[int]) -> Dict:
+        # Compute common classification metrics
         metrics = {
             "accuracy": float(accuracy_score(y_true, y_pred)),
             "f1": float(f1_score(y_true, y_pred)),
@@ -453,12 +484,14 @@ class PredictionEvaluator(BaseEvaluator):
         return metrics
 
     def save_results_csv(self, y_true: List[int], y_pred: List[int]) -> str:
+        # Save predictions and true labels to CSV for further analysis
         df = pd.DataFrame({"pred": y_pred, "actual": y_true})
         path = os.path.join(self.out_dir, "test_results.csv")
         df.to_csv(path, index=False)
         return path
 
     def save_summary_md(self, metrics: Dict, samples: int) -> str:
+        # markdown summary of the evaluation results
         path = os.path.join(self.out_dir, "summary.md")
         with open(path, "w") as f:
             f.write("# Grasp Classifier Test Summary\n\n")
@@ -485,6 +518,7 @@ class EvaluationOrchestrator:
         friction_lateral: float = 1.3,
         debug_contacts: bool = False,
     ) -> None:
+        # Save all config params
         self.model_path = model_path
         self.out_dir = out_dir
         self.samples = samples
@@ -554,6 +588,7 @@ class EvaluationOrchestrator:
             base_offset = (0.0, -math.pi / 2.0, 0.0)
         orientation_offset = base_offset if self.gripper_type == "three-finger" else None
 
+        # Generate grasp samples around the object
         positions, orientations = self.sampler.sample(self.samples, orientation_offset_euler=orientation_offset)
 
         y_true: List[int] = []
@@ -568,6 +603,7 @@ class EvaluationOrchestrator:
             else:
                 gripper = TwoFingersGripper(position=pos, orientation_euler=tuple(orn))
 
+            # Load gripper and fix it in place
             gid = gripper.load()
             gripper.attach_fixed(offset=[0, 0, 0])
 
@@ -582,6 +618,7 @@ class EvaluationOrchestrator:
 
             pred = int(self.model.predict(feature)[0])
 
+            # Move gripper to object, close fingers, then lift
             gripper.move_pickup(target_position=self.obj_position, stop_dist=self.stop_distance)
             gripper.close_gripper()
             self.env.step(steps=200, hz=240.0)
@@ -594,6 +631,7 @@ class EvaluationOrchestrator:
             y_pred.append(pred)
             y_true.append(actual)
 
+            # Clean up gripper and reset object for next trial
             p.removeBody(gid)
             p.resetBasePositionAndOrientation(obj_id, self.obj_position, [0, 0, 0, 1])
             self.env.step(steps=40, hz=240.0)
