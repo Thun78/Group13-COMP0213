@@ -4,7 +4,7 @@
 
 ## Project Description
 
-This project implements a complete pipeline for dataset generation, classifier training, and testing within an object-oriented Python framework.  
+This project implements a complete pipeline for dataset generation, classifier training, and testing within an object-oriented programming Python framework.  
 It supports:
 
 - Generating datasets with customizable parameters  
@@ -28,3 +28,13 @@ If a `requirements.txt` file is provided, install dependencies via:
 
 ```bash
 pip install -r requirements.txt
+
+
+## Usage
+
+Run the main program with different modes via command-line arguments:
+
+```bash
+python main.py --mode generate_data --num_samples 150
+python main.py --mode train_classifier
+python main.py --mode test_planner
