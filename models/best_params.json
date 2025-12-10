@@ -1,0 +1,9 @@
+{
+  "model_name": "GradientBoosting",
+  "best_params": {
+    "clf__learning_rate": 0.05,
+    "clf__max_depth": 2,
+    "clf__n_estimators": 200
+  },
+  "cv_f1": 0.8993006993006993
+}
