@@ -38,18 +38,9 @@ sns.set(context="talk", style="whitegrid")
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-# -----------------------------
-# Data loading
-# -----------------------------
-class DataLoader:
-    """
-    Loads the grasp dataset from CSV and returns features and labels.
 
-    This class centralizes:
-    - Input validation
-    - Column selection
-    - Type casting
-    """
+# Data loading
+class DataLoader:
 
     REQUIRED_COLS: List[str] = [
         "rel_x",
@@ -72,23 +63,9 @@ class DataLoader:
     TARGET_COL: str = "success"
 
     def __init__(self, csv_path: str) -> None:
-        """
-        Parameters
-        ----------
-        csv_path : str
-            Path to the grasp dataset CSV generated from simulation.
-        """
         self.csv_path = csv_path
 
     def load(self) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-        """
-        Load and validate CSV, return (df, X, y).
-
-        Returns
-        -------
-        Tuple[pd.DataFrame, np.ndarray, np.ndarray]
-            DataFrame df, features X, labels y.
-        """
         df = pd.read_csv(self.csv_path)
         missing = [c for c in self.REQUIRED_COLS if c not in df.columns]
         if missing:
@@ -99,35 +76,22 @@ class DataLoader:
         return df, X, y
 
 
-# -----------------------------
-# Model specifications (OOP)
-# -----------------------------
-class BaseModelSpec(ABC):
-    """
-    Abstract base class representing a model "specification":
-    - A named estimator pipeline (can include preprocessors like scalers)
-    - A parameter grid for hyperparameter search
 
-    Subclasses must implement:
-    - build_pipeline()
-    - param_grid()
-    """
+# Model specifications (OOP)
+class BaseModelSpec(ABC):
 
     name: str
 
     @abstractmethod
     def build_pipeline(self) -> Pipeline:
-        """Create and return the sklearn Pipeline for this model family."""
         raise NotImplementedError
 
     @abstractmethod
     def param_grid(self) -> Dict[str, List]:
-        """Return the parameter grid for GridSearchCV."""
         raise NotImplementedError
 
 
 class LogisticRegressionSpec(BaseModelSpec):
-    """Logistic Regression with StandardScaler."""
 
     name = "LogisticRegression"
 
@@ -150,7 +114,7 @@ class LogisticRegressionSpec(BaseModelSpec):
 
 
 class RandomForestSpec(BaseModelSpec):
-    """Random Forest (tree-based, no scaling required)."""
+    # Random Forest (tree-based, no scaling required)
 
     name = "RandomForest"
 
@@ -173,7 +137,7 @@ class RandomForestSpec(BaseModelSpec):
 
 
 class KNNSpec(BaseModelSpec):
-    """K-Nearest Neighbors with StandardScaler."""
+    # K-Nearest Neighbors with StandardScaler.
 
     name = "KNN"
 
@@ -196,7 +160,7 @@ class KNNSpec(BaseModelSpec):
 
 
 class SVMRBFSpec(BaseModelSpec):
-    """SVM with RBF kernel and StandardScaler."""
+    # SVM with RBF kernel and StandardScaler.
 
     name = "SVM_RBF"
 
@@ -217,7 +181,7 @@ class SVMRBFSpec(BaseModelSpec):
 
 
 class GradientBoostingSpec(BaseModelSpec):
-    """Gradient Boosting Classifier (tree-based)."""
+    # Gradient Boosting Classifier (tree-based).
 
     name = "GradientBoosting"
 
@@ -237,27 +201,9 @@ class GradientBoostingSpec(BaseModelSpec):
         }
 
 
-# -----------------------------
 # Training components
-# -----------------------------
 @dataclass
 class TrainingResult:
-    """
-    Holds the result of training a single model spec.
-
-    Attributes
-    ----------
-    model_name : str
-        Name of the model family.
-    best_estimator : BaseEstimator
-        Best estimator found by GridSearchCV.
-    best_params : Dict
-        Best hyperparameters.
-    cv_f1 : float
-        Best cross-validated F1 score.
-    search_obj : GridSearchCV
-        The search object (for access to cv results if needed).
-    """
     model_name: str
     best_estimator: BaseEstimator
     best_params: Dict
@@ -266,44 +212,12 @@ class TrainingResult:
 
 
 class ModelTrainer:
-    """
-    Trains one model spec with GridSearchCV using F1 scoring.
-
-    This class demonstrates "apply function" pattern via delegation:
-    - Accepts a BaseModelSpec to build pipeline & grid
-    - Applies a standard training procedure across different specs
-    """
 
     def __init__(self, cv_splits: int = 5, scoring: str = "f1") -> None:
-        """
-        Parameters
-        ----------
-        cv_splits : int
-            Number of StratifiedKFold splits.
-        scoring : str
-            Scoring metric for model selection (e.g., 'f1').
-        """
         self.cv_splits = cv_splits
         self.scoring = scoring
 
     def fit(self, spec: BaseModelSpec, X_train: np.ndarray, y_train: np.ndarray) -> TrainingResult:
-        """
-        Fit GridSearchCV for a given spec and return the best model and metadata.
-
-        Parameters
-        ----------
-        spec : BaseModelSpec
-            A concrete model specification.
-        X_train : np.ndarray
-            Training features.
-        y_train : np.ndarray
-            Training labels.
-
-        Returns
-        -------
-        TrainingResult
-            Best model, parameters, CV F1, and the search object.
-        """
         pipeline = spec.build_pipeline()
         param_grid = spec.param_grid()
         cv = StratifiedKFold(n_splits=self.cv_splits, shuffle=True, random_state=42)
@@ -328,24 +242,9 @@ class ModelTrainer:
 
 
 class Evaluator:
-    """
-    Generates evaluation metrics and plots for a trained model.
-
-    Responsibilities:
-    - Predict on held-out test set
-    - Compute metrics (accuracy, f1, precision, recall)
-    - Confusion matrix
-    - ROC curve / PR curve (if probabilities available)
-    - Learning curve (bias/variance diagnostic)
-    """
 
     def __init__(self, out_dir: str) -> None:
-        """
-        Parameters
-        ----------
-        out_dir : str
-            Output directory for metrics and plots.
-        """
+
         self.out_dir = out_dir
         os.makedirs(self.out_dir, exist_ok=True)
 
@@ -357,14 +256,7 @@ class Evaluator:
         y_train: np.ndarray,
         y_test: np.ndarray,
     ) -> Dict:
-        """
-        Evaluate model on the hold-out test set and save plots and metrics.
-
-        Returns
-        -------
-        Dict
-            Dictionary with evaluation metrics and a full classification report.
-        """
+      
         metrics = {}
 
         # Predictions (hard labels)
@@ -404,7 +296,7 @@ class Evaluator:
 
         return metrics
 
-    # ---- Plot helpers (apply functions / composition) ----
+    # Plot apply functions / composition 
     def _plot_confusion_matrix(self, cm: np.ndarray) -> None:
         plt.figure(figsize=(5, 4))
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
@@ -469,17 +361,6 @@ class Evaluator:
 
 
 class TrainingOrchestrator:
-    """
-    Coordinates end-to-end training across multiple model specifications:
-    - Splits data (stratified)
-    - Trains each spec with ModelTrainer
-    - Selects the best by CV F1
-    - Evaluates on the test set
-    - Saves model and artifacts
-
-    Demonstrates OOP composition:
-    - Orchestrator composes DataLoader, ModelTrainer, Evaluator, and Specs.
-    """
 
     def __init__(
         self,
@@ -498,16 +379,7 @@ class TrainingOrchestrator:
         os.makedirs(self.out_dir, exist_ok=True)
 
     def run(self, X: np.ndarray, y: np.ndarray) -> Dict:
-        """
-        Run the full orchestration and return test metrics for the best model.
-
-        Steps:
-        - Train/test split
-        - For each model spec: training via GridSearchCV
-        - Select best by CV F1
-        - Evaluate best on test set
-        - Persist artifacts (model, best params)
-        """
+        
         # Stratified train/test split to preserve class balance
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=self.test_size, random_state=42, stratify=y
@@ -582,4 +454,5 @@ def main(data="three_finger_cylinder.csv", out="models", test_size=0.25, cv=5) -
 
 
 if __name__ == "__main__":
+
     main()
