@@ -423,9 +423,16 @@ class TrainingOrchestrator:
         return metrics
 
 def main(data="three_finger_cylinder.csv", out="models", test_size=0.25, cv=5) -> Dict:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Resolve dataset path safely
+    if not os.path.isabs(data):
+        data_path = os.path.join(base_dir, "data", data)
+    else:
+        data_path = data
+    
     # Load data (composition: Orchestrator uses DataLoader)
-    loader = DataLoader(data)
+    loader = DataLoader(data_path)
     df, X, y = loader.load()
 
     # Define the model specs to consider (inheritance: each is a BaseModelSpec)
@@ -456,3 +463,4 @@ def main(data="three_finger_cylinder.csv", out="models", test_size=0.25, cv=5) -
 if __name__ == "__main__":
 
     main()
+
