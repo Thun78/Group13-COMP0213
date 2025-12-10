@@ -27,18 +27,24 @@ class Grippers(ABC):
 
     def move_up_classify(self, obj_id, new_z=1, duration=1.5, no_contact_timeout=0.5,
                 contact_ratio_threshold=0.99):
+        # Simulation frequency in Hz for stepping through the motion
         sim_hz = 50
+                    
+        # Calculate total number of simulation steps based on duration and frequency
         total_steps = max(1, int(duration * sim_hz))
         timeout_steps = max(1, int(no_contact_timeout * sim_hz))
 
+        # Contact events and no-contact streaks
         contact_steps = 0
         total_contact_checks = 0
         consecutive_no_contact_steps = 0
 
         start_z = self.position[2]
+        # Increment per step in Z to reach the target height smoothly
         dz = (new_z - start_z) / float(total_steps)
 
         for step_idx in range(total_steps):
+            # Increment current Z position by dz
             self.position[2] += dz
             p.changeConstraint(self.constraint_id,
                             jointChildPivot=self.position,
@@ -49,9 +55,11 @@ class Grippers(ABC):
             has_contact = len(contacts) > 0
 
             if has_contact:
+                # If there is contact, increment contact_steps and reset no-contact streak
                 contact_steps += 1
                 consecutive_no_contact_steps = 0
             else:
+                # If no contact detected, increment no-contact streak counter
                 consecutive_no_contact_steps += 1
             total_contact_checks += 1
 
@@ -62,6 +70,8 @@ class Grippers(ABC):
 
             # step simulation
             p.stepSimulation()
+
+            # Sleep to maintain approximately real-time stepping (240 Hz)
             time.sleep(1./240.)
 
         # finish lift, compute ratio for final decision
@@ -70,14 +80,19 @@ class Grippers(ABC):
         return contact_ratio >= contact_ratio_threshold
 
     def move_pickup(self, obj_position, stop_dist):
+        # Compute the difference vector from current position to target position
         dx = obj_position[0] - self.position[0]
         dy = obj_position[1] - self.position[1]
         dz = obj_position[2] - self.position[2]
+        
+        # Calculate Euclidean distance
         dist = np.sqrt(dx*dx + dy*dy + dz*dz)
 
+        # Ensure at least one step to avoid division by zero
         steps = int(dist/ 0.01)
 
         for step in range(steps):
+            # Compute the interpolated position at this step
             alpha = (step + 1) / steps
             new_x = self.position[0] + dx * alpha
             new_y = self.position[1] + dy * alpha
@@ -135,10 +150,12 @@ class ThreeFingersGripper(Grippers):
     UPPER_JOINTS = [3, 6, 9]
 
     def __init__(self, position, orientation=(0, 0, 0)):
+        # Path to the URDF file for this gripper model
         current_dir = os.path.dirname(os.path.abspath(__file__))  
         urdf_path = os.path.join(current_dir, "grippers", "threeFingers", "sdh", "sdh.urdf")
         super().__init__(urdf_path, position, orientation)
         self.open = False
+        # store the number of joints after loading
         self.num_joints = 0
 
     def load(self):
@@ -147,6 +164,7 @@ class ThreeFingersGripper(Grippers):
         return self.id
     
     def attach_fixed(self, offset=[0,0,0]):
+        # Fix the gripper in place using a fixed constraint to the world
         self.constraint_id = p.createConstraint(
             parentBodyUniqueId = self.id,
             parentLinkIndex = -1,
@@ -161,13 +179,16 @@ class ThreeFingersGripper(Grippers):
         )
 
     def get_joint_positions(self):
+        # Return current positions of all joints in the gripper
         return [p.getJointState(self.id, i)[0] for i in range(self.num_joints)]
     
     def _apply_joint_command(self, joint, target, max_velo=3):
+        # Send position control command to a single joint with velocity and force limits
         p.setJointMotorControl2(self.id, joint, p.POSITION_CONTROL,
                                 targetPosition=target, maxVelocity=max_velo, force=20)
 
     def open_gripper(self):
+        # Gradually open gripper by decreasing target positions of certain joints
         closed, iteration = True, 0
         while closed and not self.open:
             joints = self.get_joint_positions()
@@ -186,6 +207,7 @@ class ThreeFingersGripper(Grippers):
             if iteration > 1000:
                 break
             p.stepSimulation()
+        # Mark the gripper as open once done
         self.open = True
 
     def pregrasp(self):
@@ -254,13 +276,15 @@ class Sample():
             # Sample on sphere surface around the object
             theta = random.uniform(0, 2 * np.pi)  # Azimuth
             phi = random.uniform(0, np.pi/2)        # Polar
-                
+
+            # Convert spherical coords to Cartesian
             x = r_noisy * np.sin(phi) * np.cos(theta) + self.obj_center[0]
             y = r_noisy * np.sin(phi) * np.sin(theta) + self.obj_center[1]
             z = r_noisy * np.cos(phi) + self.obj_center[2]
             position = [x, y, z]
             positions.append(position)
 
+            # Calculate orientation
             dx = self.obj_center[0] - x
             dy = self.obj_center[1] - y
             dz = self.obj_center[2] - z
