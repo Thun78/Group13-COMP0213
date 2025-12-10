@@ -52,15 +52,13 @@ python main.py --mode test_planner
 │   ├── train.py            # Training script for classifiers  
 │   ├── model_test.py       # Script for model testing and evaluation  
 │   ├── grippers/           # Modules related to gripper models  
-│   └── objects/            # Modules related to object models  
+│   ├── objects/            # Modules related to object models  
+│   └── data/               # Dataset CSV files  
+│
 ├── eval/                   # Evaluation and testing scripts  
 │                           # Used to validate and analyze model performance  
 ├── models/                 # Model and data structure definitions  
 │                           # Contains class and data structure definitions  
-├── three_finger_cube.csv   # Dataset CSV files  
-├── three_finger_cylinder.csv  
-├── two_finger_cube.csv  
-├── two_finger_cylinder.csv  
 ├── README.md               # This README file  
 ```
 
@@ -76,6 +74,7 @@ If you would like to contribute, please feel free to:
 
 - TedTang124 (Ted Tang)
 - Thun78(Thun Sahacharoen)
+
 
 
 
