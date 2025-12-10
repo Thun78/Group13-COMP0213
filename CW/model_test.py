@@ -31,6 +31,7 @@ sns.set(context="talk", style="whitegrid")
 
 # Environment Manager
 class EnvironmentManager:
+    # Initialize the environment manager with GUI option.
     def __init__(self, gui: bool = True) -> None:
         self.gui = gui
         self.connection_id = None
@@ -40,9 +41,9 @@ class EnvironmentManager:
         self.connection_id = p.connect(p.GUI if self.gui else p.DIRECT)
         print("Connection ID:", self.connection_id)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        p.resetSimulation()
-        p.setGravity(0, 0, -10)
-        p.setRealTimeSimulation(0)
+        p.resetSimulation() 
+        p.setGravity(0, 0, -10)  # Set gravity for the simulation (x=0, y=0, z=-10 m/s^2).
+        p.setRealTimeSimulation(0)  # Disable real-time simulation
         self.plane_id = p.loadURDF("plane.urdf")
         p.resetDebugVisualizerCamera(
             cameraDistance=0.5,
@@ -68,14 +69,18 @@ class BaseSceneObject(ABC):
 
     @abstractmethod
     def load(self, scaling: float = 1.0) -> int:
+        # Abstract method to load the object into the simulation.
         raise NotImplementedError
+
 
 
 class Cube(BaseSceneObject):
     def __init__(self, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
+        # Initialize Cube with a fixed URDF file "cube_small.urdf"
         super().__init__("cube_small.urdf", position, orientation_euler)
 
     def load(self, scaling: float = 1.0) -> int:
+        # Load the cube into the PyBullet simulation.
         self.id = p.loadURDF(self.urdf_file, self.position, self.orientation_quat, globalScaling=scaling)
         return self.id
 
