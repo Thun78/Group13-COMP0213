@@ -41,6 +41,7 @@ def main():
 
     args = parser.parse_args()
 
+    # call based on parsed args
     if args.mode == "generate_data":
         prototype_one.main(args.num_samples)
 

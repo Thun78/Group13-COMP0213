@@ -28,9 +28,8 @@ from sklearn.metrics import (
 sns.set(context="talk", style="whitegrid")
 
 
-# -----------------------
+
 # Environment Manager
-# -----------------------
 class EnvironmentManager:
     def __init__(self, gui: bool = True) -> None:
         self.gui = gui
@@ -59,9 +58,7 @@ class EnvironmentManager:
             time.sleep(1.0 / hz)
 
 
-# -----------------------
 # Abstract Scene Object
-# -----------------------
 class BaseSceneObject(ABC):
     def __init__(self, urdf_file: str, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
         self.urdf_file = urdf_file
@@ -94,9 +91,7 @@ class Cylinder(BaseSceneObject):
         return self.id
 
 
-# -----------------------
 # Abstract Gripper
-# -----------------------
 class BaseGripper(ABC):
     def __init__(self, urdf_file: str, position: List[float], orientation_euler: Tuple[float, float, float] = (0, 0, 0)) -> None:
         self.urdf_file = urdf_file
@@ -373,10 +368,7 @@ def compute_relative_pose(gripper_id: int, obj_id: int) -> Tuple[List[float], Tu
     rel_roll, rel_pitch, rel_yaw = p.getEulerFromQuaternion(rel_orn)
     return list(rel_pos), (rel_roll, rel_pitch, rel_yaw)
 
-
-# -----------------------
 # Sampler
-# -----------------------
 class BaseSampler(ABC):
     @abstractmethod
     def sample(self, samples: int, orientation_offset_euler: Tuple[float, float, float] | None = None) -> Tuple[List[List[float]], List[List[float]]]:
@@ -419,9 +411,7 @@ class SphericalSampler(BaseSampler):
         return positions, orientations
 
 
-# -----------------------
 # Evaluator
-# -----------------------
 class BaseEvaluator(ABC):
     def __init__(self, out_dir: str) -> None:
         self.out_dir = out_dir
@@ -474,10 +464,7 @@ class PredictionEvaluator(BaseEvaluator):
             f.write(f"- Recall: {metrics['recall']:.3f}\n")
         return path
 
-
-# -----------------------
 # Orchestrator
-# -----------------------
 class EvaluationOrchestrator:
     def __init__(
         self,
@@ -636,7 +623,6 @@ def main(model="models/best_model.pkl", out="eval", samples=10, gui="store_true"
         debug_contacts=debug_contacts,
     )
     orchestrator.run()
-
 
 if __name__ == "__main__":
     main()

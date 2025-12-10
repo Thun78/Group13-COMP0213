@@ -55,7 +55,7 @@ class Grippers(ABC):
                 consecutive_no_contact_steps += 1
             total_contact_checks += 1
 
-            # --- EARLY ABORT RULE ---
+            # early abort
             if consecutive_no_contact_steps >= timeout_steps:
                 print(f"[move_up] Lost contact for {no_contact_timeout} seconds (consecutive_no_contact_steps={consecutive_no_contact_steps}) → aborting and returning False")
                 return False
