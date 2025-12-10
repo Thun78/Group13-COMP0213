@@ -28,13 +28,43 @@ If a `requirements.txt` file is provided, install dependencies via:
 
 ```bash
 pip install -r requirements.txt
+If not, manually install necessary packages (examples):
 
-
-## Usage
-
+bash
+pip install numpy pandas scikit-learn matplotlib
+Usage
 Run the main program with different modes via command-line arguments:
 
-```bash
+bash
 python main.py --mode generate_data --num_samples 150
 python main.py --mode train_classifier
 python main.py --mode test_planner
+Usage Modes and Parameters
+Mode	Description	Arguments
+generate_data	Generates dataset samples	--num_samples (optional, default: 100) — Number of samples to generate
+train_classifier	Trains classifier models using the generated dataset	None
+test_planner	Runs tests on the trained classifiers or planners	None
+
+Project Structure
+plaintext
+/
+├── CW/                # Core coursework source code  
+├── eval/              # Evaluation and testing scripts  
+├── models/            # Class and data model definitions  
+├── data/              # (Optional) Dataset storage directory  
+├── main.py            # Main script with mode-based CLI interface  
+├── requirements.txt   # Python package dependencies  
+└── README.md          # This file  
+Contributing
+If you would like to contribute, please feel free to:
+
+Submit issues or bug reports.
+
+Create pull requests with suggested improvements.
+
+Contact the project maintainers for questions or collaboration.
+
+Contributors
+Thun78
+
+TedTang124 (Ted Tang)
