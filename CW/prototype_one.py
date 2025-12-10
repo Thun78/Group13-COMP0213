@@ -136,9 +136,9 @@ class Cube(SceneObject):
 class Cylinder(SceneObject):
 
     def __init__(self, position, orientation=(0, 0, 0)):
-        current_dir1 = os.path.dirname(os.path.abspath(__file__))  
-        urdf_path1 = os.path.join(current_dir1, "cylinder.urdf")
-        super().__init__(urdf_path1, position, orientation)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        urdf_path = os.path.join(current_dir, "objects", "cylinder.urdf")
+        super().__init__(urdf_path, position, orientation)
 
     def load(self, scaling=1):
         self.id = p.loadURDF(self.urdf_file, self.position, self.orientation, globalScaling=scaling)
