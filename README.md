@@ -44,7 +44,6 @@ python main.py --mode test_planner
 
 ## Project Structure
 
-## Project Structure
 
 ```plaintext
 /
@@ -77,6 +76,7 @@ If you would like to contribute, please feel free to:
 
 - Thun78
 - TedTang124 (Ted Tang)
+
 
 
 
